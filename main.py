@@ -3,7 +3,9 @@ import bot
 
 import time
 
-grid = [[0 for _ in range(7)] for _ in range(6)]
+import config
+
+grid = [[0 for _ in range(config.BOARD_WIDTH)] for _ in range(config.BOARD_HEIGHT)]
 
 turn = 2
 last_spot = (0, 0)
@@ -16,18 +18,18 @@ while not game.check_game_over(grid) and not game.check_game_win(last_spot[0], l
         turn = 1
     game.render_grid(grid)
     ch, col = -1, -1
-    while ch < 0 or col < 0 or col > 6:
-        #col = int(input(f'Player {turn} column: ')) - 1
-        if turn == 2:
-            #col = bot.generate_move(grid, turn, hv=2, depth=6)
+    while ch < 0 or col < 0 or col >= config.BOARD_WIDTH:
+        if (turn == 1 and config.PLAYER_STARTS) or (turn == 2 and not config.PLAYER_STARTS):
+            #col = bot.generate_move(grid, turn, hv=3, depth=5)
             col = int(input(f'Player {turn} column: ')) - 1
         else:
-            t0 = time.time()
-            col = bot.generate_move(grid, turn, hv=3, depth=5)
-            print(time.time() - t0, nmoves)
-        if col < 0 or col > 6:
+            if config.BOT_STATS:
+                t0 = time.time()
+            col = bot.generate_move(grid, turn, hv=config.HEURISTIC_TYPE, depth=config.BOT_DEPTH)
+            if config.BOT_STATS:
+                print(time.time() - t0, nmoves)
+        if col < 0 or col >= config.BOARD_WIDTH:
             continue
-        #print(col + 1)
         ch = game.col_height(col, grid)
     grid[ch][col] = turn
     last_spot = (ch, col)

@@ -1,6 +1,8 @@
 import game 
 import copy
 
+import config
+
 
 def heuristic(g, turn):
     ans = 0
@@ -24,10 +26,10 @@ def heuristic2(g, turn):
             factor = (1 - int(t != turn) * 2)
             for axis in game.check_axis:
                 for dir in range(-1, 2, 2):
-                    for c in range(4):
+                    for c in range(config.CONNECT_NUM):
                         ni = i + axis[0] * c * dir
                         nj = j + axis[1] * c * dir
-                        if ni >= 0 and nj >= 0 and ni < 6 and nj < 7:
+                        if ni >= 0 and nj >= 0 and ni < config.BOARD_HEIGHT and nj < config.BOARD_WIDTH:
                             if g[ni][nj] == t:
                                 ans += factor * 2
                             elif g[ni][nj] == 0:
@@ -50,7 +52,7 @@ def heuristic3(g, turn):
                     for c in range(1, 4):
                         ni = i + axis[0] * c * dir
                         nj = j + axis[1] * c * dir
-                        if ni >= 0 and nj >= 0 and ni < 6 and nj < 7:
+                        if ni >= 0 and nj >= 0 and ni < config.BOARD_HEIGHT and nj < config.BOARD_WIDTH:
                             if g[ni][nj] == t:
                                 ans += factor * 2
                             elif g[ni][nj] == 0:
@@ -59,7 +61,6 @@ def heuristic3(g, turn):
                                 ans -= factor
                         else:
                             break
-    #print(ans, g)
     return ans
 
 def relative_heuristic3(g, turn, i, j):
@@ -71,7 +72,7 @@ def relative_heuristic3(g, turn, i, j):
             for c in range(1, 4):
                 ni = i + axis[0] * c * dir
                 nj = j + axis[1] * c * dir
-                if ni >= 0 and nj >= 0 and ni < 6 and nj < 7:
+                if ni >= 0 and nj >= 0 and ni < config.BOARD_HEIGHT and nj < config.BOARD_WIDTH:
                     if g[ni][nj] == t:
                         ans += factor * 3
                     elif g[ni][nj] == 0:
@@ -87,10 +88,10 @@ def heuristic4_axis_check(g, turn, i, j):
     t = g[i][j]
     factor = (1 - int(t != turn) * 2)
     for axis in game.check_axis:
-        for c in range(1, game.N_IN_A_ROW):
+        for c in range(1, config.CONNECT_NUM):
             ni = i + axis[0] * c
             nj = j + axis[1] * c
-            if ni >= 0 and nj >= 0 and ni < 6 and nj < 7:
+            if ni >= 0 and nj >= 0 and ni < config.BOARD_HEIGHT and nj < config.BOARD_WIDTH:
                 if g[ni][nj] == t:
                     ans += factor
                 elif g[ni][nj] == 0:
@@ -100,10 +101,10 @@ def heuristic4_axis_check(g, turn, i, j):
             else:
                 break
         right = c
-        for c in range(1, game.N_IN_A_ROW):
+        for c in range(1, config.CONNECT_NUM):
             ni = i - axis[0] * c
             nj = j - axis[1] * c
-            if ni >= 0 and nj >= 0 and ni < 6 and nj < 7:
+            if ni >= 0 and nj >= 0 and ni < config.BOARD_HEIGHT and nj < config.BOARD_WIDTH:
                 if g[ni][nj] == t:
                     ans += factor
                 elif g[ni][nj] == 0:
@@ -113,7 +114,7 @@ def heuristic4_axis_check(g, turn, i, j):
             else:
                 break
         left = c
-        if left + right >= 4:
+        if left + right >= config.CONNECT_NUM:
             ans += factor * (left + right)
     return ans
 
@@ -132,10 +133,10 @@ def relative_heuristic4(g, turn, i, j):
     g[i][j] = 0
     for axis in game.check_axis:
         for dir in range(-1, 2, 2):
-            for c in range(1, 4):
+            for c in range(1, config.CONNECT_NUM):
                 ni = i + axis[0] * c * dir
                 nj = j + axis[1] * c * dir
-                if ni >= 0 and nj >= 0 and ni < 6 and nj < 7:
+                if ni >= 0 and nj >= 0 and ni < config.BOARD_HEIGHT and nj < config.BOARD_WIDTH:
                     if g[ni][nj] == 0:
                         continue
                     ans -= heuristic4_axis_check(g, turn, ni, nj)
@@ -144,10 +145,10 @@ def relative_heuristic4(g, turn, i, j):
     g[i][j] = lt
     for axis in game.check_axis:
         for dir in range(-1, 2, 2):
-            for c in range(1, 4):
+            for c in range(1, config.CONNECT_NUM):
                 ni = i + axis[0] * c * dir
                 nj = j + axis[1] * c * dir
-                if ni >= 0 and nj >= 0 and ni < 6 and nj < 7:
+                if ni >= 0 and nj >= 0  and ni < config.BOARD_HEIGHT and nj < config.BOARD_WIDTH:
                     if g[ni][nj] == 0:
                         continue
                     ans += heuristic4_axis_check(g, turn, ni, nj)
@@ -159,10 +160,10 @@ def relative_heuristic4v2(g, turn, i, j):
     ans = 0
     for axis in game.check_axis:
         for dir in range(-1, 2, 2):
-            for c in range(1, 4):
+            for c in range(1, config.CONNECT_NUM):
                 ni = i + axis[0] * c * dir
                 nj = j + axis[1] * c * dir
-                if ni >= 0 and nj >= 0 and ni < 6 and nj < 7:
+                if ni >= 0 and nj >= 0 and ni < config.BOARD_HEIGHT and nj < config.BOARD_WIDTH:
                     if g[ni][nj] == 0:
                         continue
                     ans -= heuristic4_axis_check(g, turn, ni, nj)
@@ -181,7 +182,7 @@ def generate_move(g, turn, hv=3, depth=4):
     bs = -1e9
     bc = 0
     current_h = heuristic_versions[hv](g, turn)
-    for col in range(7):
+    for col in range(config.BOARD_WIDTH):
         if g[0][col] != 0:
             continue
         score = min_max(g, col, turn, turn, -1e9, 1e9, depth, current_h, hv=hv)
@@ -189,8 +190,9 @@ def generate_move(g, turn, hv=3, depth=4):
         if score[0] > bs:
             bs = score[0]
             bc = col
-            
-        print(col + 1, score)
+        
+        if config.BOT_STATS:
+            print(col + 1, score)
             
     return bc
 
@@ -223,7 +225,7 @@ def min_max(g, last_move, turn, my_turn, alpha, beta, depth, last_h, hv=3):
         best = [-1e9, []]
     else:
         best = [1e9, []]
-    for i in range(7):
+    for i in range(config.BOARD_WIDTH):
         if g[0][i] != 0:
             continue
         mmres = min_max(g, i, turn, my_turn, alpha, beta, depth - 1, my_h, hv=hv)
